@@ -60,7 +60,7 @@ custom:
 
 functions:
     health:
-        handler: "src/eventHandlers/http/index.health"
+        handler: "src/index.health"
         events:
             - http:
                   path: "/health"
