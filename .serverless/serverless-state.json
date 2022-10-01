@@ -9,7 +9,78 @@
       "runtime": "nodejs14.x",
       "region": "eu-central-1",
       "stage": "dev",
+      "tracing": {
+        "lambda": true
+      },
       "versionFunctions": true,
+      "iamRoleStatements": [
+        {
+          "Effect": "Allow",
+          "Action": [
+            "s3:PutObject",
+            "s3:GetObject",
+            "s3:DeleteObject",
+            "s3:ListBucket"
+          ],
+          "Resource": [
+            {
+              "Fn::GetAtt": [
+                "boilerplatebucketBucketA98525B6",
+                "Arn"
+              ]
+            },
+            {
+              "Fn::Join": [
+                "/",
+                [
+                  {
+                    "Fn::GetAtt": [
+                      "boilerplatebucketBucketA98525B6",
+                      "Arn"
+                    ]
+                  },
+                  "*"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "Effect": "Allow",
+          "Action": [
+            "dynamodb:GetItem",
+            "dynamodb:BatchGetItem",
+            "dynamodb:Query",
+            "dynamodb:Scan",
+            "dynamodb:PutItem",
+            "dynamodb:DeleteItem",
+            "dynamodb:BatchWriteItem",
+            "dynamodb:UpdateItem"
+          ],
+          "Resource": [
+            {
+              "Fn::GetAtt": [
+                "boilerplatetableTable09B049AA",
+                "Arn"
+              ]
+            },
+            {
+              "Fn::Join": [
+                "/",
+                [
+                  {
+                    "Fn::GetAtt": [
+                      "boilerplatetableTable09B049AA",
+                      "Arn"
+                    ]
+                  },
+                  "index/*"
+                ]
+              ]
+            }
+          ]
+        }
+      ],
       "compiledCloudFormationTemplate": {
         "AWSTemplateFormatVersion": "2010-09-09",
         "Description": "The AWS CloudFormation template for this Serverless application",
@@ -145,6 +216,22 @@
                             "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/Serverless-Boilerplate-dev*:*:*"
                           }
                         ]
+                      },
+                      {
+                        "$ref": "$[\"service\"][\"provider\"][\"iamRoleStatements\"][0]"
+                      },
+                      {
+                        "$ref": "$[\"service\"][\"provider\"][\"iamRoleStatements\"][1]"
+                      },
+                      {
+                        "Effect": "Allow",
+                        "Action": [
+                          "xray:PutTraceSegments",
+                          "xray:PutTelemetryRecords"
+                        ],
+                        "Resource": [
+                          "*"
+                        ]
                       }
                     ]
                   }
@@ -176,7 +263,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/Serverless-Boilerplate/dev/1664639749555-2022-10-01T15:55:49.555Z/Serverless-Boilerplate.zip"
+                "S3Key": "serverless/Serverless-Boilerplate/dev/1664641066729-2022-10-01T16:17:46.729Z/Serverless-Boilerplate.zip"
               },
               "Handler": "src/index.health",
               "Runtime": "nodejs14.x",
@@ -186,11 +273,11 @@
               "Tags": [
                 {
                   "Key": "GIT_COMMIT_SHORT",
-                  "Value": "bab2fbf5"
+                  "Value": "89f884b7"
                 },
                 {
                   "Key": "GIT_COMMIT_LONG",
-                  "Value": "bab2fbf50b800a25257c4db5abad2800c00e12f2"
+                  "Value": "89f884b73ddc3074fc888e60c3e4de0ad09721a3"
                 },
                 {
                   "Key": "GIT_BRANCH",
@@ -206,17 +293,20 @@
                 },
                 {
                   "Key": "GIT_TAGS",
-                  "Value": "bab2fbf5"
+                  "Value": "89f884b7"
                 }
               ],
+              "TracingConfig": {
+                "Mode": "Active"
+              },
               "Environment": {
                 "Variables": {
-                  "GIT_COMMIT_SHORT": "bab2fbf5",
-                  "GIT_COMMIT_LONG": "bab2fbf50b800a25257c4db5abad2800c00e12f2",
+                  "GIT_COMMIT_SHORT": "89f884b7",
+                  "GIT_COMMIT_LONG": "89f884b73ddc3074fc888e60c3e4de0ad09721a3",
                   "GIT_BRANCH": "master",
                   "GIT_IS_DIRTY": "true",
                   "GIT_REPOSITORY": "aws-serverless-boilerplate",
-                  "GIT_TAGS": "bab2fbf5"
+                  "GIT_TAGS": "89f884b7"
                 }
               },
               "Role": {
@@ -227,16 +317,13 @@
               },
               "Layers": [
                 "arn:aws:lambda:eu-central-1:580247275435:layer:LambdaInsightsExtension:14"
-              ],
-              "TracingConfig": {
-                "Mode": "PassThrough"
-              }
+              ]
             },
             "DependsOn": [
               "HealthLogGroup"
             ]
           },
-          "HealthLambdaVersionpAJwmDg0OYODfBMDHpczwpLl8RDOJdNUvHhitOH5DW4": {
+          "HealthLambdaVersionghFbx1H0H0vyNi24c2tZO02zU7MgqiCHILVclmzyc": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
@@ -364,7 +451,7 @@
               "HealthLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1664639748235": {
+          "ApiGatewayDeployment1664641065453": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -413,6 +500,135 @@
                 ]
               }
             }
+          },
+          "boilerplatebucketBucketA98525B6": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketEncryption": {
+                "ServerSideEncryptionConfiguration": [
+                  {
+                    "ServerSideEncryptionByDefault": {
+                      "SSEAlgorithm": "AES256"
+                    }
+                  }
+                ]
+              },
+              "LifecycleConfiguration": {
+                "Rules": [
+                  {
+                    "Status": "Enabled",
+                    "Transitions": [
+                      {
+                        "StorageClass": "INTELLIGENT_TIERING",
+                        "TransitionInDays": 0
+                      }
+                    ]
+                  },
+                  {
+                    "NoncurrentVersionExpiration": {
+                      "NoncurrentDays": 30
+                    },
+                    "Status": "Enabled"
+                  }
+                ]
+              },
+              "PublicAccessBlockConfiguration": {
+                "BlockPublicAcls": true,
+                "BlockPublicPolicy": true,
+                "IgnorePublicAcls": true,
+                "RestrictPublicBuckets": true
+              },
+              "VersioningConfiguration": {
+                "Status": "Enabled"
+              }
+            },
+            "UpdateReplacePolicy": "Retain",
+            "DeletionPolicy": "Retain"
+          },
+          "boilerplatebucketBucketPolicy70DF4087": {
+            "Type": "AWS::S3::BucketPolicy",
+            "Properties": {
+              "Bucket": {
+                "Ref": "boilerplatebucketBucketA98525B6"
+              },
+              "PolicyDocument": {
+                "Statement": [
+                  {
+                    "Action": "s3:*",
+                    "Condition": {
+                      "Bool": {
+                        "aws:SecureTransport": "false"
+                      }
+                    },
+                    "Effect": "Deny",
+                    "Principal": {
+                      "AWS": "*"
+                    },
+                    "Resource": [
+                      {
+                        "Fn::GetAtt": [
+                          "boilerplatebucketBucketA98525B6",
+                          "Arn"
+                        ]
+                      },
+                      {
+                        "Fn::Join": [
+                          "",
+                          [
+                            {
+                              "Fn::GetAtt": [
+                                "boilerplatebucketBucketA98525B6",
+                                "Arn"
+                              ]
+                            },
+                            "/*"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                ],
+                "Version": "2012-10-17"
+              }
+            }
+          },
+          "boilerplatetableTable09B049AA": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+              "KeySchema": [
+                {
+                  "AttributeName": "PK",
+                  "KeyType": "HASH"
+                },
+                {
+                  "AttributeName": "SK",
+                  "KeyType": "RANGE"
+                }
+              ],
+              "AttributeDefinitions": [
+                {
+                  "AttributeName": "PK",
+                  "AttributeType": "S"
+                },
+                {
+                  "AttributeName": "SK",
+                  "AttributeType": "S"
+                }
+              ],
+              "BillingMode": "PAY_PER_REQUEST",
+              "PointInTimeRecoverySpecification": {
+                "PointInTimeRecoveryEnabled": true
+              },
+              "StreamSpecification": {
+                "StreamViewType": "NEW_AND_OLD_IMAGES"
+              },
+              "TimeToLiveSpecification": {
+                "AttributeName": "TimeToLive",
+                "Enabled": true
+              }
+            },
+            "UpdateReplacePolicy": "Retain",
+            "DeletionPolicy": "Retain"
           }
         },
         "Outputs": {
@@ -427,7 +643,7 @@
           "HealthLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "HealthLambdaVersionpAJwmDg0OYODfBMDHpczwpLl8RDOJdNUvHhitOH5DW4"
+              "Ref": "HealthLambdaVersionghFbx1H0H0vyNi24c2tZO02zU7MgqiCHILVclmzyc"
             },
             "Export": {
               "Name": "sls-Serverless-Boilerplate-dev-HealthLambdaFunctionQualifiedArn"
@@ -457,6 +673,16 @@
             },
             "Export": {
               "Name": "sls-Serverless-Boilerplate-dev-ServiceEndpoint"
+            }
+          },
+          "boilerplatebucketBucketNameC9F84B87": {
+            "Value": {
+              "Ref": "boilerplatebucketBucketA98525B6"
+            }
+          },
+          "boilerplatetableTableName78018A2D": {
+            "Value": {
+              "Ref": "boilerplatetableTable09B049AA"
             }
           }
         }
@@ -576,13 +802,13 @@
       "serverless-plugin-git-variables",
       "serverless-prune-plugin",
       "serverless-lift",
-      "serverless-plugin-lambda-insights",
-      "serverless-plugin-tracing"
+      "serverless-plugin-lambda-insights"
     ],
     "pluginsData": {},
     "functions": {
       "health": {
         "handler": "src/index.health",
+        "tracing": "Active",
         "events": [
           {
             "http": {
@@ -611,20 +837,20 @@
         ],
         "name": "Serverless-Boilerplate-dev-health",
         "environment": {
-          "GIT_COMMIT_SHORT": "bab2fbf5",
-          "GIT_COMMIT_LONG": "bab2fbf50b800a25257c4db5abad2800c00e12f2",
+          "GIT_COMMIT_SHORT": "89f884b7",
+          "GIT_COMMIT_LONG": "89f884b73ddc3074fc888e60c3e4de0ad09721a3",
           "GIT_BRANCH": "master",
           "GIT_IS_DIRTY": "true",
           "GIT_REPOSITORY": "aws-serverless-boilerplate",
-          "GIT_TAGS": "bab2fbf5"
+          "GIT_TAGS": "89f884b7"
         },
         "tags": {
-          "GIT_COMMIT_SHORT": "bab2fbf5",
-          "GIT_COMMIT_LONG": "bab2fbf50b800a25257c4db5abad2800c00e12f2",
+          "GIT_COMMIT_SHORT": "89f884b7",
+          "GIT_COMMIT_LONG": "89f884b73ddc3074fc888e60c3e4de0ad09721a3",
           "GIT_BRANCH": "master",
           "GIT_IS_DIRTY": "true",
           "GIT_REPOSITORY": "aws-serverless-boilerplate",
-          "GIT_TAGS": "bab2fbf5"
+          "GIT_TAGS": "89f884b7"
         },
         "layers": {
           "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"HealthLambdaFunction\"][\"Properties\"][\"Layers\"]"
@@ -636,12 +862,153 @@
         "timeout": 6,
         "runtime": "nodejs14.x",
         "vpc": {},
-        "versionLogicalId": "HealthLambdaVersionpAJwmDg0OYODfBMDHpczwpLl8RDOJdNUvHhitOH5DW4"
+        "versionLogicalId": "HealthLambdaVersionghFbx1H0H0vyNi24c2tZO02zU7MgqiCHILVclmzyc"
       }
     },
     "resources": {
-      "Resources": {},
-      "Outputs": {}
+      "Resources": {
+        "boilerplatebucketBucketA98525B6": {
+          "Type": "AWS::S3::Bucket",
+          "Properties": {
+            "BucketEncryption": {
+              "ServerSideEncryptionConfiguration": [
+                {
+                  "ServerSideEncryptionByDefault": {
+                    "SSEAlgorithm": "AES256"
+                  }
+                }
+              ]
+            },
+            "LifecycleConfiguration": {
+              "Rules": [
+                {
+                  "Status": "Enabled",
+                  "Transitions": [
+                    {
+                      "StorageClass": "INTELLIGENT_TIERING",
+                      "TransitionInDays": 0
+                    }
+                  ]
+                },
+                {
+                  "NoncurrentVersionExpiration": {
+                    "NoncurrentDays": 30
+                  },
+                  "Status": "Enabled"
+                }
+              ]
+            },
+            "PublicAccessBlockConfiguration": {
+              "BlockPublicAcls": true,
+              "BlockPublicPolicy": true,
+              "IgnorePublicAcls": true,
+              "RestrictPublicBuckets": true
+            },
+            "VersioningConfiguration": {
+              "Status": "Enabled"
+            }
+          },
+          "UpdateReplacePolicy": "Retain",
+          "DeletionPolicy": "Retain"
+        },
+        "boilerplatebucketBucketPolicy70DF4087": {
+          "Type": "AWS::S3::BucketPolicy",
+          "Properties": {
+            "Bucket": {
+              "Ref": "boilerplatebucketBucketA98525B6"
+            },
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": "s3:*",
+                  "Condition": {
+                    "Bool": {
+                      "aws:SecureTransport": "false"
+                    }
+                  },
+                  "Effect": "Deny",
+                  "Principal": {
+                    "AWS": "*"
+                  },
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "boilerplatebucketBucketA98525B6",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "boilerplatebucketBucketA98525B6",
+                              "Arn"
+                            ]
+                          },
+                          "/*"
+                        ]
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Version": "2012-10-17"
+            }
+          }
+        },
+        "boilerplatetableTable09B049AA": {
+          "Type": "AWS::DynamoDB::Table",
+          "Properties": {
+            "KeySchema": [
+              {
+                "AttributeName": "PK",
+                "KeyType": "HASH"
+              },
+              {
+                "AttributeName": "SK",
+                "KeyType": "RANGE"
+              }
+            ],
+            "AttributeDefinitions": [
+              {
+                "AttributeName": "PK",
+                "AttributeType": "S"
+              },
+              {
+                "AttributeName": "SK",
+                "AttributeType": "S"
+              }
+            ],
+            "BillingMode": "PAY_PER_REQUEST",
+            "PointInTimeRecoverySpecification": {
+              "PointInTimeRecoveryEnabled": true
+            },
+            "StreamSpecification": {
+              "StreamViewType": "NEW_AND_OLD_IMAGES"
+            },
+            "TimeToLiveSpecification": {
+              "AttributeName": "TimeToLive",
+              "Enabled": true
+            }
+          },
+          "UpdateReplacePolicy": "Retain",
+          "DeletionPolicy": "Retain"
+        }
+      },
+      "Outputs": {
+        "boilerplatebucketBucketNameC9F84B87": {
+          "Value": {
+            "Ref": "boilerplatebucketBucketA98525B6"
+          }
+        },
+        "boilerplatetableTableName78018A2D": {
+          "Value": {
+            "Ref": "boilerplatetableTable09B049AA"
+          }
+        }
+      }
     },
     "configValidationMode": "warn",
     "serviceFilename": "serverless.yml",
@@ -656,7 +1023,68 @@
         "runtime": "nodejs14.x",
         "region": "eu-central-1",
         "stage": "dev",
-        "versionFunctions": true
+        "tracing": {
+          "lambda": true
+        },
+        "versionFunctions": true,
+        "iamRoleStatements": [
+          {
+            "Effect": "Allow",
+            "Action": [
+              "s3:PutObject",
+              "s3:GetObject",
+              "s3:DeleteObject",
+              "s3:ListBucket"
+            ],
+            "Resource": [
+              "${Token[TOKEN.239]}",
+              {
+                "Fn::Join": [
+                  "/",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "boilerplatebucketBucketA98525B6",
+                        "Arn"
+                      ]
+                    },
+                    "*"
+                  ]
+                ]
+              }
+            ]
+          },
+          {
+            "Effect": "Allow",
+            "Action": [
+              "dynamodb:GetItem",
+              "dynamodb:BatchGetItem",
+              "dynamodb:Query",
+              "dynamodb:Scan",
+              "dynamodb:PutItem",
+              "dynamodb:DeleteItem",
+              "dynamodb:BatchWriteItem",
+              "dynamodb:UpdateItem"
+            ],
+            "Resource": [
+              "${Token[TOKEN.249]}",
+              {
+                "Fn::Join": [
+                  "/",
+                  [
+                    {
+                      "Fn::GetAtt": [
+                        "boilerplatetableTable09B049AA",
+                        "Arn"
+                      ]
+                    },
+                    "index/*"
+                  ]
+                ]
+              }
+            ]
+          }
+        ]
       },
       "custom": {
         "lambdaInsights": {
@@ -684,6 +1112,7 @@
       "functions": {
         "health": {
           "handler": "src/index.health",
+          "tracing": "Active",
           "events": [
             {
               "http": {
@@ -695,21 +1124,29 @@
           ],
           "name": "Serverless-Boilerplate-dev-health",
           "environment": {
-            "GIT_COMMIT_SHORT": "bab2fbf5",
-            "GIT_COMMIT_LONG": "bab2fbf50b800a25257c4db5abad2800c00e12f2",
+            "GIT_COMMIT_SHORT": "89f884b7",
+            "GIT_COMMIT_LONG": "89f884b73ddc3074fc888e60c3e4de0ad09721a3",
             "GIT_BRANCH": "master",
             "GIT_IS_DIRTY": "true",
             "GIT_REPOSITORY": "aws-serverless-boilerplate",
-            "GIT_TAGS": "bab2fbf5"
+            "GIT_TAGS": "89f884b7"
           },
           "tags": {
-            "GIT_COMMIT_SHORT": "bab2fbf5",
-            "GIT_COMMIT_LONG": "bab2fbf50b800a25257c4db5abad2800c00e12f2",
+            "GIT_COMMIT_SHORT": "89f884b7",
+            "GIT_COMMIT_LONG": "89f884b73ddc3074fc888e60c3e4de0ad09721a3",
             "GIT_BRANCH": "master",
             "GIT_IS_DIRTY": "true",
             "GIT_REPOSITORY": "aws-serverless-boilerplate",
-            "GIT_TAGS": "bab2fbf5"
+            "GIT_TAGS": "89f884b7"
           }
+        }
+      },
+      "constructs": {
+        "boilerplate-bucket": {
+          "type": "storage"
+        },
+        "boilerplate-table": {
+          "type": "database/dynamodb-single-table"
         }
       }
     },
@@ -717,7 +1154,7 @@
     "isDashboardMonitoringPreconfigured": false
   },
   "package": {
-    "artifactDirectoryName": "serverless/Serverless-Boilerplate/dev/1664639749555-2022-10-01T15:55:49.555Z",
+    "artifactDirectoryName": "serverless/Serverless-Boilerplate/dev/1664641066729-2022-10-01T16:17:46.729Z",
     "artifact": "Serverless-Boilerplate.zip"
   }
 }

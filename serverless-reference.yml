@@ -1,0 +1,147 @@
+# service: Serverless-Boilerplate
+# frameworkVersion: "3"
+# plugins:
+#     - serverless-esbuild
+#     - serverless-plugin-git-variables
+#     - serverless-prune-plugin
+#     - serverless-lift
+#     - serverless-plugin-lambda-insights
+
+# provider:
+#     name: aws
+#     runtime: nodejs14.x
+#     region: eu-central-1
+#     stage: ${opt:stage,"dev"}
+#     tracing:
+#         lambda: true
+#     environment:
+#         SERVICE_NAME: ${self:service}
+#         NODE_OPTIONS: "--enable-source-maps"
+#         STAGE: ${self:provider.stage}
+#         RECORD_TABLE_NAME: ${construct:records.tableName}
+#         UPLOADS_BUCKET_NAME: ${construct:ImageStorage.bucketName}
+#         ANALYSIS_BUCKET_NAME: ${construct:AnalysisStorage.bucketName}
+#         SERVICE_VERSION: ${file(./package.json):version}
+
+#     iamRoleStatements:
+#         - Effect: "Allow"
+#           Action:
+#               - "states:StartExecution"
+#           Resource:
+#               - "*"
+#         - Effect: "Allow"
+#           Action: "textract:AnalyzeDocument"
+#           Resource: "*"
+#         - Effect: Allow
+#           Action:
+#               - sqs:SendMessage
+#           Resource: "*"
+
+# custom:
+#     lambdaInsights:
+#         defaultLambdaInsights: true
+#     esbuild:
+#         bundle: true
+#         minify: false
+#         sourcemap: external
+#         exclude:
+#             - "aws-sdk"
+#     prune:
+#         automatic: true
+#         number: 3
+#     manifest:
+#         output: ./serverless.manifest.json
+#         disableOutput: false
+#         silent: false
+#         srcPath: ./serverless.yml
+
+# functions:
+#     health:
+#         handler: "src/index.health"
+#         tracing: Active
+#         events:
+#             - http:
+#                   path: "/health"
+#                   method: get
+#                   cors: true
+#     track:
+#         handler: "src/eventHandlers/http/index.track"
+#         ephemeralStorageSize: 10240
+#         events:
+#             - http:
+#                   path: "/track"
+#                   method: post
+#                   cors: true
+
+#     recordsStreamHandler:
+#         handler: "src/eventHandlers/stream/index.handleRecordsStream"
+#         ephemeralStorageSize: 10240
+#         timeout: 300
+#         events:
+#             - stream:
+#                   type: dynamodb
+#                   arn: ${construct:records.tableStreamArn}
+#                   batchSize: 1
+#     resources:
+#         Resources:
+#             SqsQueuePolicy:
+#                 Type: AWS::SQS::QueuePolicy
+#                 Properties:
+#                     Queues:
+#                         - ${construct:UploadsQueue.queueUrl}
+#                         - ${construct:AnalysisQueue.queueUrl}
+#                     PolicyDocument:
+#                         Version: "2012-10-17"
+#                         Statement:
+#                             - Action:
+#                                   - sqs:SendMessage
+#                               Effect: Allow
+#                               Resource: "*"
+#                               Principal: "*"
+
+# constructs:
+#     boilerplate-bucket:
+#         type: storage
+
+#     boilerplate-table:
+#         type: database/dynamodb-single-table
+
+#     ImageStorage:
+#         type: storage
+#         extensions:
+#             bucket:
+#                 Properties:
+#                     NotificationConfiguration:
+#                         QueueConfigurations:
+#                             - Event: s3:ObjectCreated:*
+#                               Filter:
+#                                   S3Key:
+#                                       Rules:
+#                                           - Name: prefix
+#                                             Value: json/
+#                               Queue: ${construct:UploadsQueue.queueArn}
+
+#     AnalysisStorage:
+#         type: storage
+#         extensions:
+#             bucket:
+#                 Properties:
+#                     NotificationConfiguration:
+#                         QueueConfigurations:
+#                             - Event: s3:ObjectCreated:*
+#                               Filter:
+#                                   S3Key:
+#                                       Rules:
+#                                           - Name: prefix
+#                                             Value: json/
+#                               Queue: ${construct:AnalysisQueue.queueArn}
+
+#     UploadsQueue:
+#         type: queue
+#         worker:
+#             handler: "src/eventHandlers/queue/index.uploadsQueueConsumer"
+
+#     AnalysisQueue:
+#         type: queue
+#         worker:
+#             handler: "src/eventHandlers/queue/index.analysisQueueConsumer"
